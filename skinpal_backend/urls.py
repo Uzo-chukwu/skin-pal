@@ -22,6 +22,8 @@ urlpatterns = [
     path('api/analysis/', include('analysis.urls')),
     path('api/routines/', include('routines.urls')),
     path('api/reminders/', include('reminders.urls')),
+    path('api/articles/', include('articles.urls')),
+
 
 
 ]
