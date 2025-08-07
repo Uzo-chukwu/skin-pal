@@ -1,6 +1,7 @@
 from pathlib import Path
 import environ
 import os
+from datetime import timedelta
 
 # Initialize environment
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,9 +14,8 @@ SECRET_KEY = env("SECRET_KEY")
 OPENAI_API_KEY = env("OPENAI_API_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG")
-
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+DEBUG = env.bool("DEBUG", default=False)  # ✅ Ensure boolean
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[".onrender.com"])  # ✅ Safe default
 
 # Application definition
 INSTALLED_APPS = [
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ✅ Required for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -71,23 +72,15 @@ WSGI_APPLICATION = 'skinpal.wsgi.application'
 
 # Database
 DATABASES = {
-    'default': env.db(),
+    'default': env.db(),  # ✅ Render will supply DATABASE_URL
 }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # Internationalization
@@ -96,8 +89,14 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
-STATIC_URL = 'static/'
+# ✅ Static files setup for Render
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # ✅ Required by Render
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # ✅ Use WhiteNoise
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -112,6 +111,13 @@ REST_FRAMEWORK = {
     ],
 }
 
+# JWT Config
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=365),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=700),
+}
+
+# Swagger Settings
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'Bearer': {
@@ -123,28 +129,25 @@ SWAGGER_SETTINGS = {
     }
 }
 
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-from datetime import timedelta
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=365),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=700),
-}
-
-# Swagger / OpenAPI metadata
+# OpenAPI / Docs metadata
 SPECTACULAR_SETTINGS = {
     'TITLE': 'SkinPal API',
     'DESCRIPTION': 'An intelligent skincare assistant API for users and dermatologists. Features skin analysis, routines, progress tracking, consultations, and more.',
     'VERSION': '1.0.0',
     'CONTACT': {
         'name': "SkinPal Dev Team",
-        'email': "uzochukwuonwuagba@gmail.com.com",
+        'email': "uzochukwuonwuagba@gmail.com",
     },
     'LICENSE': {
-        'name': 'apache License',
+        'name': 'Apache License',
     },
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+# Static files for Render deployment
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')  # after SecurityMiddleware
