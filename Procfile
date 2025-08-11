@@ -1,1 +1,3 @@
-web: gunicorn skinpal.wsgi
+web: gunicorn skinpal.wsgi:application
+
+
