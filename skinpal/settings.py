@@ -15,7 +15,8 @@ OPENAI_API_KEY = env("OPENAI_API_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)  # ✅ Ensure boolean
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[".onrender.com"])  # ✅ Safe default
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[".onrender.com"])
+
 
 # Application definition
 INSTALLED_APPS = [
